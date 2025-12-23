@@ -21,12 +21,16 @@ import '../transactions/transaction_detail_screen.dart';
 import '../transactions/transaction_form_screen.dart';
 import '../usage/usage_scope.dart';
 import '../utils/money.dart';
+import '../utils/persian_formatting.dart';
+import '../invoice/invoice_dialog.dart';
+import '../localization/app_localizations.dart';
 
 enum _MenuAction {
   accounts,
   categories,
   charts,
   settings,
+  invoice,
   exportCsv,
   importCsv,
   policy,
@@ -56,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = AuthScope.of(context);
     final transactions = TransactionScope.of(context);
     final accounts = AccountScope.of(context);
@@ -87,9 +92,24 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    final balance = formatMoneyCents(balanceCents);
-    final income = formatMoneyCents(incomeCents);
-    final expenses = formatMoneyCents(expenseCents);
+    final balance = l10n.locale.languageCode == 'fa'
+        ? formatMoneyPersian(balanceCents)
+        : formatMoneyCents(
+            balanceCents,
+            currencySymbol: l10n.currencySymbol,
+          );
+    final income = l10n.locale.languageCode == 'fa'
+        ? formatMoneyPersian(incomeCents)
+        : formatMoneyCents(
+            incomeCents,
+            currencySymbol: l10n.currencySymbol,
+          );
+    final expenses = l10n.locale.languageCode == 'fa'
+        ? formatMoneyPersian(expenseCents)
+        : formatMoneyCents(
+            expenseCents,
+            currencySymbol: l10n.currencySymbol,
+          );
 
     var filteredTxList = _selectedDate == null
         ? txList
@@ -125,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(l10n.dashboard),
         actions: [
           IconButton(
             onPressed: () async {
@@ -150,29 +170,29 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             onPressed: auth.logout,
             icon: const Icon(Icons.lock_outline),
-            tooltip: 'Lock',
+            tooltip: l10n.logout,
           ),
           PopupMenuButton<_SortMode>(
             icon: const Icon(Icons.sort),
-            tooltip: 'Sort',
+            tooltip: l10n.filter,
             onSelected: (mode) => setState(() => _sortMode = mode),
             itemBuilder: (context) {
-              return const [
+              return [
                 PopupMenuItem(
                   value: _SortMode.date,
-                  child: Text('Sort by date'),
+                  child: Text(l10n.sortByDate),
                 ),
                 PopupMenuItem(
                   value: _SortMode.amount,
-                  child: Text('Sort by amount'),
+                  child: Text(l10n.sortByAmount),
                 ),
                 PopupMenuItem(
                   value: _SortMode.income,
-                  child: Text('Income first'),
+                  child: Text(l10n.incomeFirst),
                 ),
                 PopupMenuItem(
                   value: _SortMode.expense,
-                  child: Text('Expense first'),
+                  child: Text(l10n.expenseFirst),
                 ),
               ];
             },
@@ -208,6 +228,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                   return;
+                case _MenuAction.invoice:
+                  await showDialog<void>(
+                    context: context,
+                    builder: (context) => const InvoiceDialog(),
+                  );
+                  return;
                 case _MenuAction.exportCsv:
                   final csv = exportTransactionsCsv(txList);
                   await Clipboard.setData(ClipboardData(text: csv));
@@ -235,7 +261,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Imported ${imported.length} transactions'),
+                      content: Text(
+                        '${l10n.importedTransactions}: ${imported.length}',
+                      ),
                     ),
                   );
                   return;
@@ -243,17 +271,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   await showDialog<void>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Privacy policy'),
-                      content: const Text(
-                        'This app works offline.\n\n'
-                        'Your data is stored locally on your device.\n'
-                        'Transactions, bank cards, and categories are encrypted at rest.\n\n'
-                        'You can export your data anytime as CSV.',
-                      ),
+                      title: Text(l10n.privacyPolicy),
+                      content: Text(l10n.privacyPolicyContent),
                       actions: [
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('OK'),
+                          child: Text(l10n.ok),
                         ),
                       ],
                     ),
@@ -265,18 +288,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     context: context,
                     builder: (context) {
                       return AlertDialog(
-                        title: const Text('Delete account?'),
-                        content: const Text(
-                          'This deletes the local account and all transactions on this device.',
-                        ),
+                        title: Text(l10n.deleteAccountConfirm),
+                        content: Text(l10n.deleteAccountWarning),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
+                            child: Text(l10n.cancel),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            child: const Text('Delete'),
+                            child: Text(l10n.delete),
                           ),
                         ],
                       );
@@ -293,35 +314,103 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) {
-              return const [
+              return [
                 PopupMenuItem(
                   value: _MenuAction.accounts,
-                  child: Text('Bank cards'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.credit_card, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.accounts),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.categories,
-                  child: Text('Categories'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.category, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.categories),
+                    ],
+                  ),
                 ),
-                PopupMenuItem(value: _MenuAction.charts, child: Text('Charts')),
+                PopupMenuItem(
+                  value: _MenuAction.charts,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.pie_chart, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.charts),
+                    ],
+                  ),
+                ),
                 PopupMenuItem(
                   value: _MenuAction.settings,
-                  child: Text('Settings'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.settings, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.settings),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _MenuAction.invoice,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.picture_as_pdf, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.generateInvoice),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.exportCsv,
-                  child: Text('Export CSV (Excel)'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.download, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.exportCsv),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.importCsv,
-                  child: Text('Import CSV (Excel)'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.upload, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.importCsv),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.policy,
-                  child: Text('Privacy policy'),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.policy, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.privacyPolicy),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.deleteAccount,
-                  child: Text('Delete account'),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.delete_forever,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.deleteAccount,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ),
                 ),
               ];
             },
@@ -361,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: Text(
                         _selectedDate == null
                             ? 'Any date'
-                            : _formatDate(_selectedDate!),
+                            : _formatDate(_selectedDate!, isPersian: l10n.locale.languageCode == 'fa'),
                       ),
                       onPressed: () async {
                         final picked = await showDatePicker(
@@ -381,53 +470,53 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: () => setState(() => _selectedDate = null),
                       ),
                     PopupMenuButton<_SortMode>(
-                      tooltip: 'Sort',
+                      tooltip: l10n.filter,
                       onSelected: (mode) => setState(() => _sortMode = mode),
                       itemBuilder: (context) {
-                        return const [
+                        return [
                           PopupMenuItem(
                             value: _SortMode.date,
-                            child: Text('Sort by date'),
+                            child: Text(l10n.sortByDate),
                           ),
                           PopupMenuItem(
                             value: _SortMode.amount,
-                            child: Text('Sort by amount'),
+                            child: Text(l10n.sortByAmount),
                           ),
                           PopupMenuItem(
                             value: _SortMode.income,
-                            child: Text('Income first'),
+                            child: Text(l10n.incomeFirst),
                           ),
                           PopupMenuItem(
                             value: _SortMode.expense,
-                            child: Text('Expense first'),
+                            child: Text(l10n.expenseFirst),
                           ),
                         ];
                       },
                       child: Chip(
                         avatar: const Icon(Icons.sort),
-                        label: Text(_sortLabel(_sortMode)),
+                        label: Text(_sortLabel(_sortMode, l10n)),
                       ),
                     ),
                     ChoiceChip(
-                      label: const Text('All'),
+                      label: Text(l10n.all),
                       selected: _typeFilter == null,
                       onSelected: (_) => setState(() => _typeFilter = null),
                     ),
                     ChoiceChip(
-                      label: const Text('Income'),
+                      label: Text(l10n.income),
                       selected: _typeFilter == TransactionType.income,
                       onSelected: (_) =>
                           setState(() => _typeFilter = TransactionType.income),
                     ),
                     ChoiceChip(
-                      label: const Text('Expense'),
+                      label: Text(l10n.expense),
                       selected: _typeFilter == TransactionType.expense,
                       onSelected: (_) =>
                           setState(() => _typeFilter = TransactionType.expense),
                     ),
                     ActionChip(
                       avatar: const Icon(Icons.pie_chart_outline),
-                      label: const Text('Charts'),
+                      label: Text(l10n.charts),
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
@@ -446,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Text(
-                      'Transactions',
+                      l10n.recentTransactions,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(width: 8),
@@ -497,7 +586,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        label: Text(l10n.add),
       ),
     );
   }
@@ -508,6 +597,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -521,7 +611,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'No transactions',
+              l10n.noTransactions,
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -567,6 +657,7 @@ class _DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final background = LinearGradient(
       colors: [scheme.primaryContainer, scheme.secondaryContainer],
@@ -601,7 +692,7 @@ class _DashboardHeader extends StatelessWidget {
                             child: Text(
                               a.number == null || a.number!.isEmpty
                                   ? a.name
-                                  : '${a.name} • ${a.number}',
+                                  : '${a.name} • ${formatCardNumber(a.number)}',
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -623,7 +714,7 @@ class _DashboardHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Balance',
+            l10n.totalBalance,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: scheme.onPrimaryContainer.withValues(alpha: 0.75),
             ),
@@ -641,14 +732,11 @@ class _DashboardHeader extends StatelessWidget {
             spacing: 10,
             runSpacing: 6,
             children: [
-              _HeaderPill(
-                icon: Icons.today_outlined,
-                text: 'As of ${_formatDate(asOf)}',
-              ),
+              _HeaderPill(icon: Icons.today_outlined, text: _formatDate(asOf, isPersian: l10n.locale.languageCode == 'fa')),
               if (initialBalanceCents != 0)
                 _HeaderPill(
                   icon: Icons.savings_outlined,
-                  text: 'Initial ${formatMoneyCents(initialBalanceCents)}',
+                  text: 'Initial ${l10n.locale.languageCode == 'fa' ? formatMoneyPersian(initialBalanceCents) : formatMoneyCents(initialBalanceCents, currencySymbol: l10n.currencySymbol)}',
                 ),
               if (username != null && username!.trim().isNotEmpty)
                 _HeaderPill(icon: Icons.person_outline, text: username!.trim()),
@@ -663,12 +751,12 @@ class _DashboardHeader extends StatelessWidget {
                 if (lastIn != null)
                   _HeaderPill(
                     icon: Icons.login_outlined,
-                    text: 'In ${_formatDateTime(lastIn!)}',
+                    text: 'In ${_formatDateTime(lastIn!, isPersian: l10n.locale.languageCode == 'fa')}',
                   ),
                 if (lastOut != null)
                   _HeaderPill(
                     icon: Icons.logout_outlined,
-                    text: 'Out ${_formatDateTime(lastOut!)}',
+                    text: 'Out ${_formatDateTime(lastOut!, isPersian: l10n.locale.languageCode == 'fa')}',
                   ),
               ],
             ),
@@ -678,7 +766,7 @@ class _DashboardHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: _MetricCard(
-                  label: 'Income',
+                  label: l10n.income,
                   value: income,
                   color: Colors.green,
                 ),
@@ -686,7 +774,7 @@ class _DashboardHeader extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _MetricCard(
-                  label: 'Expenses',
+                  label: l10n.expense,
                   value: expenses,
                   color: Colors.red,
                 ),
@@ -808,8 +896,14 @@ class _TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final amount = formatMoneyCents(amountCents);
+    final amount = l10n.locale.languageCode == 'fa'
+        ? formatMoneyPersian(amountCents)
+        : formatMoneyCents(
+            amountCents,
+            currencySymbol: l10n.currencySymbol,
+          );
     final isExpense = type == TransactionType.expense;
     final amountText = isExpense ? '-$amount' : '+$amount';
     final amountColor = isExpense ? Colors.red : Colors.green;
@@ -841,7 +935,7 @@ class _TransactionCard extends StatelessWidget {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
-          '$category • ${_formatDate(date)}${notInBalanceYet ? ' • Not in balance yet' : ''}',
+          '$category • ${_formatDate(date, isPersian: l10n.locale.languageCode == 'fa')}${notInBalanceYet ? ' • Not in balance yet' : ''}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -870,7 +964,10 @@ class _TransactionCard extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime date) {
+String _formatDate(DateTime date, {bool isPersian = false}) {
+  if (isPersian) {
+    return formatDatePersian(date);
+  }
   final y = date.year.toString().padLeft(4, '0');
   final m = date.month.toString().padLeft(2, '0');
   final d = date.day.toString().padLeft(2, '0');
@@ -881,8 +978,11 @@ bool _isSameDay(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
-String _formatDateTime(DateTime dateTime) {
+String _formatDateTime(DateTime dateTime, {bool isPersian = false}) {
   final dt = dateTime.toLocal();
+  if (isPersian) {
+    return formatDateTimePersian(dt);
+  }
   final y = dt.year.toString().padLeft(4, '0');
   final m = dt.month.toString().padLeft(2, '0');
   final d = dt.day.toString().padLeft(2, '0');
@@ -891,11 +991,11 @@ String _formatDateTime(DateTime dateTime) {
   return '$y-$m-$d $h:$min';
 }
 
-String _sortLabel(_SortMode mode) {
+String _sortLabel(_SortMode mode, AppLocalizations l10n) {
   return switch (mode) {
-    _SortMode.date => 'Date',
-    _SortMode.amount => 'Amount',
-    _SortMode.income => 'Income first',
-    _SortMode.expense => 'Expense first',
+    _SortMode.date => l10n.sortByDate,
+    _SortMode.amount => l10n.sortByAmount,
+    _SortMode.income => l10n.incomeFirst,
+    _SortMode.expense => l10n.expenseFirst,
   };
 }

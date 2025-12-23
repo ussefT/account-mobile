@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'localization/app_localizations.dart';
 import 'auth/auth_controller.dart';
 import 'auth/auth_repository.dart';
 import 'auth/auth_scope.dart';
@@ -107,6 +109,14 @@ class _FlutterAccountAppState extends State<FlutterAccountApp> {
                         ),
                       ),
                       themeMode: _settingsController.themeMode,
+                      locale: _settingsController.locale,
+                      supportedLocales: const [Locale('en'), Locale('fa')],
+                      localizationsDelegates: const [
+                        AppLocalizations.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                      ],
                       builder: (context, child) {
                         final mediaQuery = MediaQuery.of(context);
                         return MediaQuery(

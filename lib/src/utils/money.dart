@@ -5,7 +5,17 @@ String formatMoneyCents(int cents, {String currencySymbol = '\$'}) {
   final abs = cents.abs();
   final major = abs ~/ 100;
   final minor = abs % 100;
-  final formatted = '$currencySymbol$major.${minor.toString().padLeft(2, '0')}';
+  
+  // Format major with thousand separators
+  final formattedMajor = _formatWholeWithCommas(major.toString());
+  
+  String formatted;
+  if (minor == 0) {
+    formatted = '$currencySymbol$formattedMajor';
+  } else {
+    formatted = '$currencySymbol$formattedMajor.${minor.toString().padLeft(2, '0')}';
+  }
+
   return isNegative ? '-$formatted' : formatted;
 }
 

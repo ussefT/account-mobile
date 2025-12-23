@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../accounts/account_scope.dart';
 import '../auth/auth_scope.dart';
 import '../categories/category_scope.dart';
+import '../localization/app_localizations.dart';
 import '../utils/money.dart';
+import '../utils/persian_formatting.dart';
 import 'account_transaction.dart';
 import 'transaction_controller.dart';
 import 'transaction_scope.dart';
@@ -121,6 +123,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     final isEditing = widget.initial != null;
     final accountsController = AccountScope.of(context);
     final categoryController = CategoryScope.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final accounts = accountsController.accounts;
     if (accounts.isEmpty) {
@@ -160,7 +163,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                           child: Text(
                             a.number == null || a.number!.isEmpty
                                 ? a.name
-                                : '${a.name} • ${a.number}',
+                                : '${a.name} • ${formatCardNumber(a.number)}',
                           ),
                         ),
                       )
@@ -277,12 +280,12 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.calendar_today_outlined),
                     ),
-                    child: Text(_formatDate(_date)),
+                    child: Text(_formatDate(_date, isPersian: l10n.locale.languageCode == 'fa')),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This transaction affects the balance on ${_formatDate(_date)}.',
+                  'This transaction affects the balance on ${_formatDate(_date, isPersian: l10n.locale.languageCode == 'fa')}.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -327,8 +330,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     );
   }
 }
-
-String _formatDate(DateTime date) {
+String _formatDate(DateTime date, {bool isPersian = false}) {
+  if (isPersian) {
+    return formatDatePersian(date);
+  }
   final y = date.year.toString().padLeft(4, '0');
   final m = date.month.toString().padLeft(2, '0');
   final d = date.day.toString().padLeft(2, '0');

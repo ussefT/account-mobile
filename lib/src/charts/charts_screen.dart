@@ -3,10 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../accounts/account_scope.dart';
+import '../localization/app_localizations.dart';
 import '../transactions/account_transaction.dart';
 import '../transactions/transaction_scope.dart';
 import '../transactions/transaction_type.dart';
 import '../utils/money.dart';
+import '../utils/persian_formatting.dart';
 
 class ChartsScreen extends StatelessWidget {
   const ChartsScreen({super.key});
@@ -15,6 +17,7 @@ class ChartsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final accounts = AccountScope.of(context);
     final transactions = TransactionScope.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final selectedAccount = accounts.selectedAccount;
     final selectedAccountName = selectedAccount?.name ?? 'Cash';
@@ -77,7 +80,7 @@ class ChartsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Current ${formatMoneyCents(series.isEmpty ? initialBalanceCents : series.last.balanceCents)}',
+                      'Current ${l10n.locale.languageCode == 'fa' ? formatMoneyPersian(series.isEmpty ? initialBalanceCents : series.last.balanceCents) : formatMoneyCents(series.isEmpty ? initialBalanceCents : series.last.balanceCents)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -134,13 +137,17 @@ class ChartsScreen extends StatelessWidget {
                                       _LegendRow(
                                         color: Colors.green,
                                         label: 'Income',
-                                        value: formatMoneyCents(incomeCents),
+                                        value: l10n.locale.languageCode == 'fa'
+                                            ? formatMoneyPersian(incomeCents)
+                                            : formatMoneyCents(incomeCents),
                                       ),
                                       const SizedBox(height: 8),
                                       _LegendRow(
                                         color: Colors.red,
                                         label: 'Expenses',
-                                        value: formatMoneyCents(expenseCents),
+                                        value: l10n.locale.languageCode == 'fa'
+                                            ? formatMoneyPersian(expenseCents)
+                                            : formatMoneyCents(expenseCents),
                                       ),
                                     ],
                                   ),

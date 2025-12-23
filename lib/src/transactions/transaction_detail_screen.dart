@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../accounts/account_scope.dart';
+import '../localization/app_localizations.dart';
 import '../utils/money.dart';
+import '../utils/persian_formatting.dart';
 import 'transaction_form_screen.dart';
 import 'transaction_scope.dart';
 import 'transaction_type.dart';
@@ -13,6 +15,7 @@ class TransactionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final controller = TransactionScope.of(context);
     final accounts = AccountScope.of(context);
     final tx = controller.findById(transactionId);
@@ -20,7 +23,12 @@ class TransactionDetailScreen extends StatelessWidget {
       return const Scaffold(body: Center(child: Text('Transaction not found')));
     }
 
-    final amount = formatMoneyCents(tx.amountCents);
+    final amount = l10n.locale.languageCode == 'fa'
+        ? formatMoneyPersian(tx.amountCents)
+        : formatMoneyCents(
+            tx.amountCents,
+            currencySymbol: l10n.currencySymbol,
+          );
     final amountText = tx.type == TransactionType.expense
         ? '-$amount'
         : '+$amount';
@@ -37,7 +45,7 @@ class TransactionDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transaction'),
+        title: Text(l10n.transactionDetails),
         actions: [
           IconButton(
             onPressed: () {
@@ -48,23 +56,25 @@ class TransactionDetailScreen extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit',
+            tooltip: l10n.edit,
           ),
           IconButton(
             onPressed: () async {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Delete transaction?'),
-                  content: const Text('This cannot be undone.'),
+                  title: Text(l10n.delete),
+                  content: Text(
+                    l10n.deleteAccountConfirm,
+                  ), // Reusing generic confirmation or add new key
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.cancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Delete'),
+                      child: Text(l10n.delete),
                     ),
                   ],
                 ),
@@ -74,7 +84,7 @@ class TransactionDetailScreen extends StatelessWidget {
               if (context.mounted) Navigator.of(context).pop();
             },
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete',
+            tooltip: l10n.delete,
           ),
         ],
       ),
@@ -102,24 +112,40 @@ class TransactionDetailScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (accountName != null) Chip(label: Text(accountName)),
-                        Chip(label: Text(tx.type.name)),
-                        Chip(label: Text(tx.category)),
-                        Chip(label: Text(_formatDate(tx.date))),
-                        if (tx.createdBy != null)
-                          Chip(label: Text('By ${tx.createdBy!}')),
-                        if (tx.relatedPerson != null)
-                          Chip(label: Text(tx.relatedPerson!)),
-                      ],
-                    ),
-                    if (tx.note != null) ...[
-                      const SizedBox(height: 12),
-                      Text(tx.note!),
+                    if (tx.note != null && tx.note!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.note,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tx.note!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
+                    const SizedBox(height: 24),
+                    _DetailRow(
+                      label: l10n.date,
+                      value: l10n.locale.languageCode == 'fa'
+                          ? formatDatePersian(tx.date)
+                          : tx.date.toString().split(' ').first,
+                    ),
+                    if (accountName != null)
+                      _DetailRow(label: l10n.account, value: accountName),
+                    _DetailRow(label: l10n.category, value: tx.category),
+                    if (tx.relatedPerson != null)
+                      _DetailRow(
+                        label: l10n.relatedPerson,
+                        value: tx.relatedPerson!,
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'ID: ${tx.id}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -131,9 +157,33 @@ class TransactionDetailScreen extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime date) {
-  final y = date.year.toString().padLeft(4, '0');
-  final m = date.month.toString().padLeft(2, '0');
-  final d = date.day.toString().padLeft(2, '0');
-  return '$y-$m-$d';
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
 }

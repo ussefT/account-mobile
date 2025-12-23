@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../transactions/transaction_scope.dart';
 import '../utils/money.dart';
+import '../utils/persian_formatting.dart';
 import 'account_form_screen.dart';
 import 'account_scope.dart';
 
@@ -12,6 +14,7 @@ class AccountsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final accounts = AccountScope.of(context);
     final transactions = TransactionScope.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -50,8 +53,11 @@ class AccountsScreen extends StatelessWidget {
                 title: Text(a.name),
                 subtitle: Text(
                   [
-                    if (a.number != null && a.number!.isNotEmpty) a.number!,
-                    'Balance ${formatMoneyCents(balance)}',
+                    if (a.number != null && a.number!.isNotEmpty)
+                      formatCardNumber(a.number),
+                    l10n.locale.languageCode == 'fa'
+                        ? formatMoneyPersian(balance)
+                        : formatMoneyCents(balance),
                   ].join(' • '),
                 ),
                 onTap: () {
@@ -89,12 +95,12 @@ class AccountsScreen extends StatelessWidget {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
+                                      child: Text(l10n.cancel),
                                     ),
                                     FilledButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(true),
-                                      child: const Text('Delete'),
+                                      child: Text(l10n.delete),
                                     ),
                                   ],
                                 ),
@@ -113,3 +119,5 @@ class AccountsScreen extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'auth_scope.dart';
+import '../localization/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,9 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final controller = AuthScope.of(context);
     final username = controller.username;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: Text(l10n.login)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -77,15 +79,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password / PIN',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.password,
+                    border: const OutlineInputBorder(),
                   ),
                   obscureText: true,
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.password],
                   validator: (value) {
-                    if ((value ?? '').isEmpty) return 'Enter a password';
+                    if ((value ?? '').isEmpty) return l10n.enterPassword;
                     return null;
                   },
                   onFieldSubmitted: (_) => _submit(),
@@ -105,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Unlock'),
+                      : Text(l10n.login),
                 ),
               ],
             ),
