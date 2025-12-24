@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -167,11 +168,12 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.clear),
               tooltip: 'Clear date',
             ),
-          IconButton(
-            onPressed: auth.logout,
-            icon: const Icon(Icons.lock_outline),
-            tooltip: l10n.logout,
-          ),
+          if (auth.passwordEnabled)
+            IconButton(
+              onPressed: auth.logout,
+              icon: const Icon(Icons.lock_outline),
+              tooltip: l10n.logout,
+            ),
           PopupMenuButton<_MenuAction>(
             onSelected: (action) async {
               switch (action) {
@@ -213,12 +215,61 @@ class _HomeScreenState extends State<HomeScreen> {
                   final csv = exportTransactionsCsv(txList);
                   await Clipboard.setData(ClipboardData(text: csv));
                   if (!context.mounted) return;
-                  final file = XFile.fromData(
-                    Uint8List.fromList(utf8.encode(csv)),
-                    mimeType: 'text/csv',
-                    name: 'transactions.csv',
+                  
+                  // Show dialog to choose save destination or share
+                  final chosen = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.exportCsv),
+                      content: Text('${l10n.exportCsv} - ${l10n.choose}'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(l10n.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Save to File'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(l10n.share),
+                        ),
+                      ],
+                    ),
                   );
-                  await Share.shareXFiles([file], subject: 'Transactions CSV');
+                  
+                  if (!context.mounted) return;
+                  
+                  if (chosen == true) {
+                    // Save to file
+                    final result = await FilePicker.platform.saveFile(
+                      fileName: 'transactions_${DateTime.now().toString().split(' ')[0]}.csv',
+                      type: FileType.custom,
+                      allowedExtensions: const ['csv'],
+                    );
+                    if (result != null && context.mounted) {
+                      try {
+                        final file = File(result);
+                        await file.writeAsString(csv);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${l10n.save}: $result')),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${l10n.couldNotSave}$e')),
+                        );
+                      }
+                    }
+                  } else if (chosen == false) {
+                    // Share
+                    final file = XFile.fromData(
+                      Uint8List.fromList(utf8.encode(csv)),
+                      mimeType: 'text/csv',
+                      name: 'transactions.csv',
+                    );
+                    await Share.shareXFiles([file], subject: 'Transactions CSV');
+                  }
                   return;
                 case _MenuAction.importCsv:
                   final result = await FilePicker.platform.pickFiles(

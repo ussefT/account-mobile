@@ -93,7 +93,7 @@ class _FlutterAccountAppState extends State<FlutterAccountApp> {
                   ]),
                   builder: (context, _) {
                     return MaterialApp(
-                      title: 'Offline Account',
+                      title: 'Account Manager',
                       theme: ThemeData(
                         useMaterial3: true,
                         colorScheme: ColorScheme.fromSeed(

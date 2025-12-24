@@ -145,3 +145,94 @@ String convertFromPersianNumbers(String text) {
   }
   return result;
 }
+
+/// Convert number to Persian words
+/// Examples: 20 -> بیست, 123 -> یکصد و بیست و سه
+String numberToPersianWords(int number) {
+  if (number == 0) return 'صفر';
+  
+  const ones = [
+    '',
+    'یک',
+    'دو',
+    'سه',
+    'چهار',
+    'پنج',
+    'شش',
+    'هفت',
+    'هشت',
+    'نه'
+  ];
+  const tens = [
+    '',
+    '',
+    'بیست',
+    'سی',
+    'چهل',
+    'پنجاه',
+    'شصت',
+    'هفتاد',
+    'هشتاد',
+    'نود'
+  ];
+  const teens = [
+    'ده',
+    'یازده',
+    'دوازده',
+    'سیزده',
+    'چهارده',
+    'پانزده',
+    'شانزده',
+    'هفده',
+    'هجده',
+    'نوزده'
+  ];
+
+  if (number < 0) {
+    return 'منفی ${numberToPersianWords(-number)}';
+  }
+
+  if (number < 10) {
+    return ones[number];
+  }
+
+  if (number < 20) {
+    return teens[number - 10];
+  }
+
+  if (number < 100) {
+    final ten = number ~/ 10;
+    final one = number % 10;
+    if (one == 0) return tens[ten];
+    return '${tens[ten]} و ${ones[one]}';
+  }
+
+  if (number < 1000) {
+    final hundred = number ~/ 100;
+    final remainder = number % 100;
+    final result = remainder == 0
+        ? '${ones[hundred]}صد'
+        : '${ones[hundred]}صد و ${numberToPersianWords(remainder)}';
+    return result;
+  }
+
+  if (number < 1000000) {
+    final thousand = number ~/ 1000;
+    final remainder = number % 1000;
+    final result = remainder == 0
+        ? '${numberToPersianWords(thousand)} هزار'
+        : '${numberToPersianWords(thousand)} هزار و ${numberToPersianWords(remainder)}';
+    return result;
+  }
+
+  if (number < 1000000000) {
+    final million = number ~/ 1000000;
+    final remainder = number % 1000000;
+    final result = remainder == 0
+        ? '${numberToPersianWords(million)} میلیون'
+        : '${numberToPersianWords(million)} میلیون و ${numberToPersianWords(remainder)}';
+    return result;
+  }
+
+  return number.toString();
+}

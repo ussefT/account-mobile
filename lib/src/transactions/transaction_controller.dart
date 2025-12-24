@@ -20,7 +20,11 @@ class TransactionController extends ChangeNotifier {
       List<AccountTransaction>.unmodifiable(_transactions);
 
   Future<void> init() async {
-    _transactions = _sort(await _repository.loadAll());
+    try {
+      _transactions = _sort(await _repository.loadAll());
+    } catch (e) {
+      _transactions = const [];
+    }
     _initialized = true;
     notifyListeners();
   }

@@ -33,8 +33,31 @@ class AccountController extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    _accounts = await _repository.loadAll();
-    if (_accounts.isEmpty) {
+    try {
+      _accounts = await _repository.loadAll();
+      if (_accounts.isEmpty) {
+        final account = BankAccount(
+          id: 'default',
+          name: 'Cash',
+          number: null,
+          initialBalanceCents: 0,
+          createdAt: DateTime.now(),
+        );
+        _accounts = [account];
+        await _repository.saveAll(_accounts);
+      }
+
+      _selectedAccountId = await _repository.readSelectedAccountId();
+      if (_selectedAccountId == null ||
+          !_accounts.any((a) => a.id == _selectedAccountId)) {
+        _selectedAccountId = _accounts.first.id;
+        await _repository.writeSelectedAccountId(_selectedAccountId);
+      }
+
+      _initialized = true;
+      notifyListeners();
+    } catch (e) {
+      // If initialization fails, create a default account
       final account = BankAccount(
         id: 'default',
         name: 'Cash',
@@ -43,18 +66,10 @@ class AccountController extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
       _accounts = [account];
-      await _repository.saveAll(_accounts);
+      _selectedAccountId = 'default';
+      _initialized = true;
+      notifyListeners();
     }
-
-    _selectedAccountId = await _repository.readSelectedAccountId();
-    if (_selectedAccountId == null ||
-        !_accounts.any((a) => a.id == _selectedAccountId)) {
-      _selectedAccountId = _accounts.first.id;
-      await _repository.writeSelectedAccountId(_selectedAccountId);
-    }
-
-    _initialized = true;
-    notifyListeners();
   }
 
   Future<void> selectAccount(String accountId) async {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 import '../accounts/account_scope.dart';
 import '../transactions/transaction_scope.dart';
@@ -121,6 +123,90 @@ class _InvoiceDialogState extends State<InvoiceDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),
         ),
+        TextButton(
+          onPressed: () async {
+            // Filter transactions
+            final transactionsController = TransactionScope.of(context);
+            final auth = AuthScope.of(context);
+
+            var filtered = transactionsController.transactions;
+
+            if (_selectedAccountId != null) {
+              filtered = filtered
+                  .where((t) => t.accountId == _selectedAccountId)
+                  .toList();
+            }
+
+            if (_selectedType != null) {
+              filtered = filtered
+                  .where((t) => t.type == _selectedType)
+                  .toList();
+            }
+
+            if (_startDate != null) {
+              final start = DateTime(
+                _startDate!.year,
+                _startDate!.month,
+                _startDate!.day,
+              );
+              filtered = filtered
+                  .where((t) => !t.date.isBefore(start))
+                  .toList();
+            }
+
+            if (_endDate != null) {
+              final end = DateTime(
+                _endDate!.year,
+                _endDate!.month,
+                _endDate!.day,
+                23,
+                59,
+                59,
+              );
+              filtered = filtered.where((t) => !t.date.isAfter(end)).toList();
+            }
+
+            if (!context.mounted) return;
+            Navigator.of(context).pop();
+
+            // Save to file
+            final fileName = 'invoice_${DateTime.now().toString().split(' ')[0]}.pdf';
+            final result = await FilePicker.platform.saveFile(
+              fileName: fileName,
+              type: FileType.custom,
+              allowedExtensions: const ['pdf'],
+            );
+
+            if (result != null && context.mounted) {
+              try {
+                final pdfBytes = await InvoiceService.generatePdf(
+                  transactions: filtered,
+                  userName: auth.username ?? 'User',
+                  startDate: _startDate,
+                  endDate: _endDate,
+                  isPersian: isPersian,
+                  l10n: l10n,
+                );
+                
+                final file = File(result);
+                await file.writeAsBytes(pdfBytes);
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${l10n.save}: $result')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${l10n.couldNotSave}$e')),
+                  );
+                }
+              }
+            }
+          },
+          child: Text(l10n.save),
+        ),
         FilledButton(
           onPressed: () async {
             // Filter transactions
@@ -142,7 +228,6 @@ class _InvoiceDialogState extends State<InvoiceDialog> {
             }
 
             if (_startDate != null) {
-              // Start of the day
               final start = DateTime(
                 _startDate!.year,
                 _startDate!.month,
@@ -154,7 +239,6 @@ class _InvoiceDialogState extends State<InvoiceDialog> {
             }
 
             if (_endDate != null) {
-              // End of the day
               final end = DateTime(
                 _endDate!.year,
                 _endDate!.month,
@@ -175,7 +259,7 @@ class _InvoiceDialogState extends State<InvoiceDialog> {
               startDate: _startDate,
               endDate: _endDate,
               isPersian: isPersian,
-              l10n: l10n, // Pass localization
+              l10n: l10n,
             );
           },
           child: Text(l10n.generatePdf),

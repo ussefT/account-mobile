@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 
 import '../accounts/account_scope.dart';
 import '../auth/auth_scope.dart';
@@ -138,13 +140,43 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   }
 
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) setState(() => _date = picked);
+    final l10n = AppLocalizations.of(context);
+    final isPersian = l10n.locale.languageCode == 'fa';
+    
+    if (isPersian) {
+      // Use Persian date picker
+      final jalaliDate = Jalali.fromDateTime(_date);
+      final picked = await showPersianDatePicker(
+        context: context,
+        initialDate: jalaliDate,
+        firstDate: Jalali(1379),
+        lastDate: Jalali(1480),
+      );
+      if (picked != null) {
+        setState(() => _date = picked.toDateTime());
+      }
+    } else {
+      // Use standard date picker
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: _date,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+      if (picked != null) setState(() => _date = picked);
+    }
+  }
+
+  String _buildPersianAmountText() {
+    try {
+      final cents = parseMoneyToCents(_amountController.text);
+      final rials = cents ~/ 100;
+      final rialText = numberToPersianWords(rials);
+      final formatted = formatMoneyPersian(cents);
+      return '$formatted ($rialText)';
+    } catch (_) {
+      return '';
+    }
   }
 
   @override
@@ -250,6 +282,17 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     }
                   },
                 ),
+                if (isPersian && _amountController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      _buildPersianAmountText(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleController,

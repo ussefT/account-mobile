@@ -184,15 +184,15 @@ class AccountsScreen extends StatelessWidget {
               key: ValueKey(a.id),
               direction: DismissDirection.horizontal,
               onDismissed: (direction) async {
-                if (direction == DismissDirection.startToEnd) {
-                  // Swipe right to edit
+                if (direction == DismissDirection.endToStart) {
+                  // Swipe left to edit
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => AccountFormScreen(initial: a),
                     ),
                   );
-                } else if (direction == DismissDirection.endToStart) {
-                  // Swipe left to delete
+                } else if (direction == DismissDirection.startToEnd) {
+                  // Swipe right to delete
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -218,16 +218,16 @@ class AccountsScreen extends StatelessWidget {
                 }
               },
               background: Container(
-                color: Colors.blue,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.only(left: 16),
-                child: const Icon(Icons.edit_outlined, color: Colors.white),
-              ),
-              secondaryBackground: Container(
                 color: Colors.red,
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.only(right: 16),
                 child: const Icon(Icons.delete_outline, color: Colors.white),
+              ),
+              secondaryBackground: Container(
+                color: Colors.blue,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 16),
+                child: const Icon(Icons.edit_outlined, color: Colors.white),
               ),
               child: listItem,
             );

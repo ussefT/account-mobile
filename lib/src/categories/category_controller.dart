@@ -19,8 +19,57 @@ class CategoryController extends ChangeNotifier {
       List<TxnCategory>.unmodifiable(_categories);
 
   Future<void> init() async {
-    _categories = await _repository.loadAll();
-    if (_categories.isEmpty) {
+    try {
+      _categories = await _repository.loadAll();
+      if (_categories.isEmpty) {
+        _categories = [
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Food',
+            type: TransactionType.expense,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Snack',
+            type: TransactionType.expense,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Transport',
+            type: TransactionType.expense,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Loan',
+            type: TransactionType.expense,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Other',
+            type: TransactionType.expense,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Salary',
+            type: TransactionType.income,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Gift',
+            type: TransactionType.income,
+          ),
+          TxnCategory(
+            id: TransactionController.newId(),
+            name: 'Other',
+            type: TransactionType.income,
+          ),
+        ];
+        await _repository.saveAll(_categories);
+      }
+      _initialized = true;
+      notifyListeners();
+    } catch (e) {
+      // If initialization fails, set up default categories without saving
       _categories = [
         TxnCategory(
           id: TransactionController.newId(),
@@ -63,10 +112,9 @@ class CategoryController extends ChangeNotifier {
           type: TransactionType.income,
         ),
       ];
-      await _repository.saveAll(_categories);
+      _initialized = true;
+      notifyListeners();
     }
-    _initialized = true;
-    notifyListeners();
   }
 
   List<TxnCategory> categoriesForType(TransactionType type) {

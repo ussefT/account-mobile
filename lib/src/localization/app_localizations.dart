@@ -15,7 +15,7 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'appTitle': 'Offline Account',
+      'appTitle': 'Account Manager',
       'dashboard': 'Dashboard',
       'settings': 'Settings',
       'accounts': 'Accounts',
@@ -144,6 +144,8 @@ class AppLocalizations {
       'swipeActionsEnabled': 'Enable Swipe Actions',
       'swipeLeft': 'Swipe Left to Delete',
       'swipeRight': 'Swipe Right to Edit',
+      'choose': 'Choose Action',
+      'share': 'Share',
     },
     'fa': {
       'appTitle': 'حساب آفلاین',
@@ -275,6 +277,8 @@ class AppLocalizations {
       'swipeActionsEnabled': 'فعال کردن کشش‌های جانبی',
       'swipeLeft': 'کشش چپ برای حذف',
       'swipeRight': 'کشش راست برای ویرایش',
+      'choose': 'انتخاب اقدام',
+      'share': 'اشتراک‌گذاری',
     },
   };
 
@@ -408,6 +412,8 @@ class AppLocalizations {
   String get swipeActionsEnabled => get('swipeActionsEnabled');
   String get swipeLeft => get('swipeLeft');
   String get swipeRight => get('swipeRight');
+  String get choose => get('choose');
+  String get share => get('share');
 }
 
 class _AppLocalizationsDelegate

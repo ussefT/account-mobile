@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'dart:typed_data';
 
 import '../transactions/account_transaction.dart';
 import '../transactions/transaction_type.dart';
@@ -10,7 +11,7 @@ import '../utils/persian_formatting.dart';
 import '../localization/app_localizations.dart';
 
 class InvoiceService {
-  static Future<void> generateAndPrint({
+  static Future<Uint8List> generatePdf({
     required List<AccountTransaction> transactions,
     required String userName,
     required DateTime? startDate,
@@ -20,19 +21,12 @@ class InvoiceService {
   }) async {
     final pdf = pw.Document();
 
-    // Attempt to load a font that supports Persian if needed
-    // Since we don't have a guaranteed font file, we rely on Printing's font resolution
-    // or a standard font. For now, we'll try to use a standard font or the default.
-    // In a real app, you should bundle a font like Vazir.ttf
-
     pw.Font font;
     pw.Font boldFont;
     try {
       font = await PdfGoogleFonts.vazirmatnRegular();
       boldFont = await PdfGoogleFonts.vazirmatnBold();
     } catch (e) {
-      // Fallback if no internet or error.
-      // Note: Standard fonts might not support Persian characters.
       font = pw.Font.courier();
       boldFont = pw.Font.courierBold();
     }
@@ -63,8 +57,28 @@ class InvoiceService {
       ),
     );
 
+    return pdf.save();
+  }
+
+  static Future<void> generateAndPrint({
+    required List<AccountTransaction> transactions,
+    required String userName,
+    required DateTime? startDate,
+    required DateTime? endDate,
+    required bool isPersian,
+    required AppLocalizations l10n,
+  }) async {
+    final pdfBytes = await generatePdf(
+      transactions: transactions,
+      userName: userName,
+      startDate: startDate,
+      endDate: endDate,
+      isPersian: isPersian,
+      l10n: l10n,
+    );
+
     await Printing.layoutPdf(
-      onLayout: (format) async => pdf.save(),
+      onLayout: (format) async => pdfBytes,
       name: 'invoice_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
   }
@@ -78,17 +92,7 @@ class InvoiceService {
     bool isPersian,
     AppLocalizations l10n,
   ) {
-    // Note: l10n strings are currently based on the device locale context passed from UI.
-    // However, if we want the PDF language to strictly follow the `isPersian` flag regardless of UI locale,
-    // we should ideally re-fetch localized strings for 'fa' or 'en'.
-    // But since we are passing `l10n` from the dialog which is rebuilt with current locale,
-    // and `isPersian` is derived from that locale, using `l10n` directly is correct.
-
     final title = isPersian ? 'صورت‌حساب' : 'Invoice';
-    // Overriding specific labels if needed, or using l10n.
-    // For PDF specific layout, sometimes hardcoded strings for specific languages are safer if l10n keys are general.
-    // Let's use manual strings here to ensure PDF specific terminology if l10n is generic.
-
     final userLabel = isPersian ? 'کاربر:' : 'User:';
     final dateLabel = isPersian ? 'تاریخ گزارش:' : 'Report Date:';
     final periodLabel = isPersian ? 'دوره:' : 'Period:';
