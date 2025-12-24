@@ -25,13 +25,23 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
-      final ok = await AuthScope.of(
-        context,
-      ).login(password: _passwordController.text);
+      final controller = AuthScope.of(context);
+      // If password is disabled, just login without password
+      if (!controller.passwordEnabled) {
+        final ok = await controller.login(password: '');
+        if (!ok && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login failed')),
+          );
+        }
+        return;
+      }
+      
+      final ok = await controller.login(password: _passwordController.text);
       if (!ok && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Wrong password')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Wrong password')),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -57,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final controller = AuthScope.of(context);
     final username = controller.username;
     final l10n = AppLocalizations.of(context);
+    final passwordRequired = controller.passwordEnabled;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.login)),
@@ -77,21 +88,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    border: const OutlineInputBorder(),
+                if (passwordRequired)
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      border: const OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    validator: (value) {
+                      if ((value ?? '').isEmpty) return l10n.enterPassword;
+                      return null;
+                    },
+                    onFieldSubmitted: (_) => _submit(),
                   ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  autofillHints: const [AutofillHints.password],
-                  validator: (value) {
-                    if ((value ?? '').isEmpty) return l10n.enterPassword;
-                    return null;
-                  },
-                  onFieldSubmitted: (_) => _submit(),
-                ),
                 const Spacer(),
                 OutlinedButton.icon(
                   onPressed: _submitting ? null : _biometric,

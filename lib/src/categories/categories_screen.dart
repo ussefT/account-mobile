@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
+import '../settings/settings_scope.dart';
 import '../transactions/transaction_controller.dart';
 import '../transactions/transaction_type.dart';
 import 'category.dart';
@@ -18,15 +20,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = CategoryScope.of(context);
+    final settings = SettingsScope.of(context);
     final items = controller.categoriesForType(_type);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: Text(l10n.categories),
         actions: [
           IconButton(
             onPressed: () async {
-              final name = await _promptName(context, title: 'Add category');
+              final name = await _promptName(context, title: l10n.addCategory, l10n: l10n);
               if (name == null || name.trim().isEmpty) return;
               await controller.addCategory(
                 TxnCategory(
@@ -37,7 +41,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               );
             },
             icon: const Icon(Icons.add),
-            tooltip: 'Add',
+            tooltip: l10n.add,
           ),
         ],
       ),
@@ -47,16 +51,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: SegmentedButton<TransactionType>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: TransactionType.expense,
-                    label: Text('Expense'),
-                    icon: Icon(Icons.arrow_downward),
+                    label: Text(l10n.expense),
+                    icon: const Icon(Icons.arrow_downward),
                   ),
                   ButtonSegment(
                     value: TransactionType.income,
-                    label: Text('Income'),
-                    icon: Icon(Icons.arrow_upward),
+                    label: Text(l10n.income),
+                    icon: const Icon(Icons.arrow_upward),
                   ),
                 ],
                 selected: <TransactionType>{_type},
@@ -67,27 +71,28 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ),
             Expanded(
               child: items.isEmpty
-                  ? const Center(child: Text('No categories'))
+                  ? Center(child: Text(l10n.noTransactions))
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       itemCount: items.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final c = items[index];
-                        return Card(
+                        final listItem = Card(
                           child: ListTile(
                             title: Text(c.name),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  tooltip: 'Edit',
+                                  tooltip: l10n.edit,
                                   icon: const Icon(Icons.edit_outlined),
                                   onPressed: () async {
                                     final name = await _promptName(
                                       context,
-                                      title: 'Edit category',
+                                      title: l10n.editCategory,
                                       initial: c.name,
+                                      l10n: l10n,
                                     );
                                     if (name == null || name.trim().isEmpty) {
                                       return;
@@ -98,7 +103,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   },
                                 ),
                                 IconButton(
-                                  tooltip: 'Delete',
+                                  tooltip: l10n.delete,
                                   icon: const Icon(Icons.delete_outline),
                                   onPressed: () async {
                                     final confirmed = await showDialog<bool>(
@@ -113,12 +118,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                             onPressed: () => Navigator.of(
                                               context,
                                             ).pop(false),
-                                            child: const Text('Cancel'),
+                                            child: Text(l10n.cancel),
                                           ),
                                           FilledButton(
                                             onPressed: () =>
                                                 Navigator.of(context).pop(true),
-                                            child: const Text('Delete'),
+                                            child: Text(l10n.delete),
                                           ),
                                         ],
                                       ),
@@ -130,6 +135,71 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               ],
                             ),
                           ),
+                        );
+                        
+                        if (!settings.swipeActionsEnabled) {
+                          return listItem;
+                        }
+                        
+                        return Dismissible(
+                          key: ValueKey(c.id),
+                          direction: DismissDirection.horizontal,
+                          onDismissed: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              // Swipe right to edit
+                              final name = await _promptName(
+                                context,
+                                title: l10n.editCategory,
+                                initial: c.name,
+                                l10n: l10n,
+                              );
+                              if (name != null && name.trim().isNotEmpty) {
+                                await controller.updateCategory(
+                                  c.copyWith(name: name.trim()),
+                                );
+                              }
+                            } else if (direction == DismissDirection.endToStart) {
+                              // Swipe left to delete
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete category?'),
+                                  content: Text(
+                                    '"${c.name}" will be removed.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(
+                                        context,
+                                      ).pop(false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: Text(l10n.delete),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                await controller.deleteCategory(c.id);
+                              }
+                            }
+                          },
+                          background: Container(
+                            color: Colors.blue,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 16),
+                            child: const Icon(Icons.edit_outlined, color: Colors.white),
+                          ),
+                          secondaryBackground: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 16),
+                            child: const Icon(Icons.delete_outline, color: Colors.white),
+                          ),
+                          child: listItem,
                         );
                       },
                     ),
@@ -145,6 +215,7 @@ Future<String?> _promptName(
   BuildContext context, {
   required String title,
   String? initial,
+  required AppLocalizations l10n,
 }) {
   final controller = TextEditingController(text: initial ?? '');
   return showDialog<String?>(
@@ -154,9 +225,9 @@ Future<String?> _promptName(
         title: Text(title),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Name',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.enterCategoryName,
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
           textInputAction: TextInputAction.done,
@@ -165,11 +236,11 @@ Future<String?> _promptName(
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(null),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       );

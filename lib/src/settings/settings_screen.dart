@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../auth/auth_scope.dart';
 import '../localization/app_localizations.dart';
 import 'settings_scope.dart';
 
@@ -9,6 +10,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = SettingsScope.of(context);
+    final authController = AuthScope.of(context);
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -100,6 +102,64 @@ class SettingsScreen extends StatelessWidget {
                       divisions: 8,
                       label: controller.textScale.toStringAsFixed(1),
                       onChanged: controller.setTextScale,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.enablePassword,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: authController.passwordEnabled,
+                      onChanged: (v) async {
+                        await authController.setPasswordEnabled(v);
+                      },
+                      title: Text(
+                        authController.passwordEnabled 
+                            ? l10n.enablePassword 
+                            : l10n.skipPassword,
+                      ),
+                      secondary: Icon(
+                        authController.passwordEnabled 
+                            ? Icons.lock_outline 
+                            : Icons.lock_open,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.swipeActions,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: controller.swipeActionsEnabled,
+                      onChanged: (v) async {
+                        await controller.setSwipeActionsEnabled(v);
+                      },
+                      title: Text(l10n.swipeActionsEnabled),
+                      secondary: const Icon(Icons.swipe_outlined),
                     ),
                   ],
                 ),

@@ -101,6 +101,49 @@ class AppLocalizations {
       'today': 'Today',
       'yesterday': 'Yesterday',
       'invoiceGeneratedSuccessfully': 'Invoice generated successfully',
+      'addTransaction': 'Add transaction',
+      'editTransaction': 'Edit transaction',
+      'card': 'Card',
+      'selectCard': 'Select Card',
+      'amountHint': '1,234.50',
+      'enterAmount': 'Enter amount',
+      'enterTitle': 'Enter title',
+      'selectCategory': 'Select Category',
+      'selectDate': 'Select Date',
+      'affectsBalance': 'This transaction affects the balance on',
+      'noteOptional': 'Note (optional)',
+      'relatedPersonOptional': 'Related person (optional)',
+      'amountMustBeGreater': 'Amount must be greater than 0',
+      'couldNotSave': 'Could not save: ',
+      'enterValidAmount': 'Enter a valid amount',
+      'addCategory': 'Add category',
+      'editCategory': 'Edit category',
+      'enterCategoryName': 'Enter category name',
+      'passwordOptional': 'Password Optional',
+      'enablePassword': 'Enable password protection',
+      'skipPassword': 'Skip password (less secure)',
+      'incomeVsExpenses': 'Income vs Expenses',
+      'lastDays': 'Last',
+      'days': 'days',
+      'current': 'Current',
+      'noData': 'No data',
+      'expenses': 'Expenses',
+      'addCard': 'Add card',
+      'editCard': 'Edit card',
+      'cardBankName': 'Card / Bank name',
+      'enterCardName': 'Enter card name',
+      'cardNumber': 'Card number (optional)',
+      'initialBalance': 'Initial balance',
+      'bankCards': 'Bank cards',
+      'deleteCard': 'Delete card?',
+      'deleteCardWarning': 'Transactions in this card will be deleted.',
+      'invoiceTitle': 'Invoice',
+      'quickEdit': 'Quick Edit Balance',
+      'editBalance': 'Edit Balance',
+      'swipeActions': 'Swipe Actions',
+      'swipeActionsEnabled': 'Enable Swipe Actions',
+      'swipeLeft': 'Swipe Left to Delete',
+      'swipeRight': 'Swipe Right to Edit',
     },
     'fa': {
       'appTitle': 'حساب آفلاین',
@@ -189,6 +232,49 @@ class AppLocalizations {
       'today': 'امروز',
       'yesterday': 'دیروز',
       'invoiceGeneratedSuccessfully': 'فاکتور با موفقیت ایجاد شد',
+      'addTransaction': 'افزودن تراکنش',
+      'editTransaction': 'ویرایش تراکنش',
+      'card': 'کارت',
+      'selectCard': 'انتخاب کارت',
+      'amountHint': '1,234.50',
+      'enterAmount': 'مبلغ را وارد کنید',
+      'enterTitle': 'عنوان را وارد کنید',
+      'selectCategory': 'انتخاب دسته‌بندی',
+      'selectDate': 'انتخاب تاریخ',
+      'affectsBalance': 'این تراکنش موجودی را در تاریخ',
+      'noteOptional': 'یادداشت (اختیاری)',
+      'relatedPersonOptional': 'طرف حساب (اختیاری)',
+      'amountMustBeGreater': 'مبلغ باید بیشتر از صفر باشد',
+      'couldNotSave': 'نتوانست ذخیره شود: ',
+      'enterValidAmount': 'مبلغ معتبری را وارد کنید',
+      'addCategory': 'افزودن دسته‌بندی',
+      'editCategory': 'ویرایش دسته‌بندی',
+      'enterCategoryName': 'نام دسته‌بندی را وارد کنید',
+      'passwordOptional': 'رمز عبور اختیاری',
+      'enablePassword': 'فعال کردن محافظت با رمز عبور',
+      'skipPassword': 'بدون رمز عبور (امن‌تر نیست)',
+      'incomeVsExpenses': 'درآمد در مقابل هزینه',
+      'lastDays': 'آخرین',
+      'days': 'روز',
+      'current': 'موجودی فعلی',
+      'noData': 'داده‌ای موجود نیست',
+      'expenses': 'هزینه‌ها',
+      'addCard': 'افزودن کارت',
+      'editCard': 'ویرایش کارت',
+      'cardBankName': 'نام کارت / بانک',
+      'enterCardName': 'نام کارت را وارد کنید',
+      'cardNumber': 'شماره کارت (اختیاری)',
+      'initialBalance': 'موجودی اولیه',
+      'bankCards': 'کارت‌های بانکی',
+      'deleteCard': 'حذف کارت؟',
+      'deleteCardWarning': 'تراکنش‌های این کارت حذف خواهند شد.',
+      'invoiceTitle': 'صورت‌حساب',
+      'quickEdit': 'ویرایش سریع موجودی',
+      'editBalance': 'ویرایش موجودی',
+      'swipeActions': 'کشش‌های جانبی',
+      'swipeActionsEnabled': 'فعال کردن کشش‌های جانبی',
+      'swipeLeft': 'کشش چپ برای حذف',
+      'swipeRight': 'کشش راست برای ویرایش',
     },
   };
 
@@ -280,6 +366,48 @@ class AppLocalizations {
   String get today => get('today');
   String get yesterday => get('yesterday');
   String get invoiceGeneratedSuccessfully => get('invoiceGeneratedSuccessfully');
+  String get addTransaction => get('addTransaction');
+  String get editTransaction => get('editTransaction');
+  String get card => get('card');
+  String get selectCard => get('selectCard');
+  String get amountHint => get('amountHint');
+  String get enterAmount => get('enterAmount');
+  String get enterTitle => get('enterTitle');
+  String get selectCategory => get('selectCategory');
+  String get selectDate => get('selectDate');
+  String get affectsBalance => get('affectsBalance');
+  String get noteOptional => get('noteOptional');
+  String get relatedPersonOptional => get('relatedPersonOptional');
+  String get amountMustBeGreater => get('amountMustBeGreater');
+  String get couldNotSave => get('couldNotSave');
+  String get enterValidAmount => get('enterValidAmount');
+  String get addCategory => get('addCategory');
+  String get editCategory => get('editCategory');
+  String get enterCategoryName => get('enterCategoryName');
+  String get passwordOptional => get('passwordOptional');
+  String get enablePassword => get('enablePassword');
+  String get skipPassword => get('skipPassword');
+  String get incomeVsExpenses => get('incomeVsExpenses');
+  String get lastDays => get('lastDays');
+  String get days => get('days');
+  String get current => get('current');
+  String get noData => get('noData');
+  String get addCard => get('addCard');
+  String get editCard => get('editCard');
+  String get cardBankName => get('cardBankName');
+  String get enterCardName => get('enterCardName');
+  String get cardNumber => get('cardNumber');
+  String get initialBalance => get('initialBalance');
+  String get bankCards => get('bankCards');
+  String get deleteCard => get('deleteCard');
+  String get deleteCardWarning => get('deleteCardWarning');
+  String get invoiceTitle => get('invoiceTitle');
+  String get quickEdit => get('quickEdit');
+  String get editBalance => get('editBalance');
+  String get swipeActions => get('swipeActions');
+  String get swipeActionsEnabled => get('swipeActionsEnabled');
+  String get swipeLeft => get('swipeLeft');
+  String get swipeRight => get('swipeRight');
 }
 
 class _AppLocalizationsDelegate

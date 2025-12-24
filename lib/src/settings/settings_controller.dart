@@ -5,6 +5,7 @@ class SettingsController extends ChangeNotifier {
   static const _keyThemeMode = 'settings.theme_mode.v1';
   static const _keyTextScale = 'settings.text_scale.v1';
   static const _keyLocale = 'settings.locale.v1';
+  static const _keySwipeActionsEnabled = 'settings.swipe_actions_enabled.v1';
 
   bool _initialized = false;
   bool get initialized => _initialized;
@@ -17,6 +18,9 @@ class SettingsController extends ChangeNotifier {
 
   double _textScale = 1.0;
   double get textScale => _textScale;
+
+  bool _swipeActionsEnabled = true;
+  bool get swipeActionsEnabled => _swipeActionsEnabled;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -65,6 +69,9 @@ class SettingsController extends ChangeNotifier {
     final rawScale = prefs.getDouble(_keyTextScale);
     _textScale = (rawScale ?? 1.0).clamp(0.8, 1.6);
 
+    final rawSwipeActions = prefs.getBool(_keySwipeActionsEnabled);
+    _swipeActionsEnabled = rawSwipeActions ?? true;
+
     _initialized = true;
     notifyListeners();
   }
@@ -92,6 +99,14 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_keyTextScale, _textScale);
+  }
+
+  Future<void> setSwipeActionsEnabled(bool enabled) async {
+    if (_swipeActionsEnabled == enabled) return;
+    _swipeActionsEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySwipeActionsEnabled, enabled);
   }
 }
 

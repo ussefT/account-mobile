@@ -133,3 +133,15 @@ String convertToPersianNumbers(String text) {
   }
   return result;
 }
+
+/// Convert Persian digits to English digits for processing
+String convertFromPersianNumbers(String text) {
+  const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  
+  String result = text;
+  for (int i = 0; i < englishDigits.length; i++) {
+    result = result.replaceAll(persianDigits[i], englishDigits[i]);
+  }
+  return result;
+}

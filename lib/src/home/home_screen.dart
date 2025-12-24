@@ -172,31 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.lock_outline),
             tooltip: l10n.logout,
           ),
-          PopupMenuButton<_SortMode>(
-            icon: const Icon(Icons.sort),
-            tooltip: l10n.filter,
-            onSelected: (mode) => setState(() => _sortMode = mode),
-            itemBuilder: (context) {
-              return [
-                PopupMenuItem(
-                  value: _SortMode.date,
-                  child: Text(l10n.sortByDate),
-                ),
-                PopupMenuItem(
-                  value: _SortMode.amount,
-                  child: Text(l10n.sortByAmount),
-                ),
-                PopupMenuItem(
-                  value: _SortMode.income,
-                  child: Text(l10n.incomeFirst),
-                ),
-                PopupMenuItem(
-                  value: _SortMode.expense,
-                  child: Text(l10n.expenseFirst),
-                ),
-              ];
-            },
-          ),
           PopupMenuButton<_MenuAction>(
             onSelected: (action) async {
               switch (action) {

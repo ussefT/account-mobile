@@ -18,12 +18,16 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   bool _authenticated = false;
   bool get authenticated => _authenticated;
 
+  bool _passwordEnabled = true;
+  bool get passwordEnabled => _passwordEnabled;
+
   String? _username;
   String? get username => _username;
 
   Future<void> init() async {
     _hasAccount = await _authRepository.hasAccount();
     if (_hasAccount) {
+      _passwordEnabled = await _authRepository.passwordEnabled();
       final creds = await _authRepository.readCredentials();
       _username = creds?.username;
     }
@@ -34,10 +38,16 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> createAccount({
     required String username,
     required String password,
+    bool passwordEnabled = true,
   }) async {
-    await _authRepository.createAccount(username: username, password: password);
+    await _authRepository.createAccount(
+      username: username,
+      password: password,
+      passwordEnabled: passwordEnabled,
+    );
     _hasAccount = true;
     _authenticated = true;
+    _passwordEnabled = passwordEnabled;
     _username = username.trim();
     notifyListeners();
   }
@@ -48,8 +58,15 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
     final creds = await _authRepository.readCredentials();
     _authenticated = true;
     _username = creds?.username;
+    _passwordEnabled = await _authRepository.passwordEnabled();
     notifyListeners();
     return true;
+  }
+
+  Future<void> setPasswordEnabled(bool enabled) async {
+    await _authRepository.setPasswordEnabled(enabled);
+    _passwordEnabled = enabled;
+    notifyListeners();
   }
 
   Future<bool> biometricUnlock() async {

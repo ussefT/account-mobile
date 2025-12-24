@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../accounts/account_scope.dart';
 import '../auth/auth_scope.dart';
+import '../categories/category_controller.dart';
 import '../categories/category_scope.dart';
 import '../localization/app_localizations.dart';
 import '../utils/money.dart';
@@ -73,9 +74,11 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     setState(() => _saving = true);
     try {
       final cents = parseMoneyToCents(_amountController.text);
+      final l10n = AppLocalizations.of(context);
+      
       if (cents <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Amount must be greater than 0')),
+          SnackBar(content: Text(l10n.amountMustBeGreater)),
         );
         return;
       }
@@ -110,12 +113,38 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not save: $e')));
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.couldNotSave}$e')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _onTransactionTypeChanged(
+    TransactionType next,
+    CategoryController categoryController,
+  ) {
+    setState(() {
+      _type = next;
+      final nextCategories = categoryController.categoriesForType(next);
+      if (nextCategories.isNotEmpty &&
+          nextCategories.every((c) => c.name != _category)) {
+        _category = nextCategories.first.name;
+      }
+      _categoryFieldKey.currentState?.didChange(_category);
+    });
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => _date = picked);
   }
 
   @override
@@ -124,10 +153,11 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     final accountsController = AccountScope.of(context);
     final categoryController = CategoryScope.of(context);
     final l10n = AppLocalizations.of(context);
+    final isPersian = l10n.locale.languageCode == 'fa';
 
     final accounts = accountsController.accounts;
     if (accounts.isEmpty) {
-      return const Scaffold(body: Center(child: Text('No bank cards')));
+      return Scaffold(body: Center(child: Text(l10n.noTransactions)));
     }
     if (!accounts.any((a) => a.id == _accountId)) {
       _accountId = accounts.first.id;
@@ -140,7 +170,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit transaction' : 'Add transaction'),
+        title: Text(isEditing ? l10n.editTransaction : l10n.addTransaction),
       ),
       body: SafeArea(
         child: Padding(
@@ -152,9 +182,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 DropdownButtonFormField<String>(
                   key: _accountFieldKey,
                   initialValue: _accountId,
-                  decoration: const InputDecoration(
-                    labelText: 'Card',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.card,
+                    border: const OutlineInputBorder(),
                   ),
                   items: accounts
                       .map(
@@ -175,41 +205,35 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 SegmentedButton<TransactionType>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: TransactionType.expense,
-                      label: Text('Expense'),
-                      icon: Icon(Icons.arrow_downward),
+                      label: Text(l10n.expense),
+                      icon: const Icon(Icons.arrow_downward),
                     ),
                     ButtonSegment(
                       value: TransactionType.income,
-                      label: Text('Income'),
-                      icon: Icon(Icons.arrow_upward),
+                      label: Text(l10n.income),
+                      icon: const Icon(Icons.arrow_upward),
                     ),
                   ],
                   selected: <TransactionType>{_type},
                   onSelectionChanged: (value) {
-                    final next = value.first;
-                    setState(() {
-                      _type = next;
-                      final nextCategories = categoryController
-                          .categoriesForType(next);
-                      if (nextCategories.isNotEmpty &&
-                          nextCategories.every((c) => c.name != _category)) {
-                        _category = nextCategories.first.name;
-                      }
-                      _categoryFieldKey.currentState?.didChange(_category);
-                    });
+                    _onTransactionTypeChanged(
+                      value.first,
+                      categoryController,
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    hintText: '1,234.50',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.attach_money),
+                  decoration: InputDecoration(
+                    labelText: l10n.amount,
+                    hintText: l10n.amountHint,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: Icon(isPersian ? Icons.monetization_on : Icons.attach_money),
+                    suffixText: isPersian ? 'ریال' : null,
                   ),
                   inputFormatters: const [MoneyTextInputFormatter()],
                   keyboardType: const TextInputType.numberWithOptions(
@@ -219,25 +243,25 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                   validator: (value) {
                     try {
                       final cents = parseMoneyToCents(value ?? '');
-                      if (cents <= 0) return 'Amount must be > 0';
+                      if (cents <= 0) return l10n.amountMustBeGreater;
                       return null;
                     } catch (_) {
-                      return 'Enter a valid amount';
+                      return l10n.enterValidAmount;
                     }
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    hintText: 'Lunch',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.title),
+                  decoration: InputDecoration(
+                    labelText: l10n.title,
+                    hintText: l10n.enterTitle,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.title),
                   ),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
-                    if ((value ?? '').trim().isEmpty) return 'Enter a title';
+                    if ((value ?? '').trim().isEmpty) return l10n.enterTitle;
                     return null;
                   },
                 ),
@@ -245,10 +269,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 DropdownButtonFormField<String>(
                   key: _categoryFieldKey,
                   initialValue: _category,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.category_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.category,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.category_outlined),
                   ),
                   items: categories
                       .map(
@@ -265,36 +289,28 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setState(() => _date = picked);
-                  },
+                  onTap: _selectDate,
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.calendar_today_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.date,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.calendar_today_outlined),
                     ),
-                    child: Text(_formatDate(_date, isPersian: l10n.locale.languageCode == 'fa')),
+                    child: Text(_formatDate(_date, isPersian: isPersian)),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This transaction affects the balance on ${_formatDate(_date, isPersian: l10n.locale.languageCode == 'fa')}.',
+                  '${l10n.affectsBalance} ${_formatDate(_date, isPersian: isPersian)}.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _noteController,
-                  decoration: const InputDecoration(
-                    labelText: 'Note (optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.notes_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.noteOptional,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.notes_outlined),
                   ),
                   minLines: 1,
                   maxLines: 3,
@@ -303,10 +319,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _personController,
-                  decoration: const InputDecoration(
-                    labelText: 'Related person (optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l10n.relatedPersonOptional,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _save(),
@@ -320,7 +336,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Save'),
+                      : Text(l10n.save),
                 ),
               ],
             ),

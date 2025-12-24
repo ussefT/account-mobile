@@ -24,30 +24,49 @@ class AuthRepository {
   static const _keySalt = 'account.password_salt';
   static const _keyHash = 'account.password_hash';
   static const _keyBiometricEnabled = 'account.biometric_enabled';
+  static const _keyPasswordEnabled = 'account.password_enabled';
 
   Future<bool> hasAccount() async {
     final username = await _secureStorage.read(key: _keyUsername);
-    final salt = await _secureStorage.read(key: _keySalt);
-    final hash = await _secureStorage.read(key: _keyHash);
-    return username != null && salt != null && hash != null;
+    return username != null;
   }
 
   Future<StoredCredentials?> readCredentials() async {
     final username = await _secureStorage.read(key: _keyUsername);
     final salt = await _secureStorage.read(key: _keySalt);
     final hash = await _secureStorage.read(key: _keyHash);
-    if (username == null || salt == null || hash == null) return null;
+    if (username == null) return null;
+    if (salt == null || hash == null) return null;
     return StoredCredentials(username: username, saltBase64: salt, hashBase64: hash);
+  }
+
+  Future<bool> passwordEnabled() async {
+    final v = await _secureStorage.read(key: _keyPasswordEnabled);
+    if (v == null) return true;
+    return v.toLowerCase() != 'false';
+  }
+
+  Future<void> setPasswordEnabled(bool enabled) async {
+    await _secureStorage.write(
+      key: _keyPasswordEnabled,
+      value: enabled ? 'true' : 'false',
+    );
   }
 
   Future<void> createAccount({
     required String username,
     required String password,
+    bool passwordEnabled = true,
   }) async {
-    final passwordHash = PasswordHasher.create(password);
     await _secureStorage.write(key: _keyUsername, value: username.trim());
-    await _secureStorage.write(key: _keySalt, value: passwordHash.saltBase64);
-    await _secureStorage.write(key: _keyHash, value: passwordHash.hashBase64);
+    
+    if (passwordEnabled && password.isNotEmpty) {
+      final passwordHash = PasswordHasher.create(password);
+      await _secureStorage.write(key: _keySalt, value: passwordHash.saltBase64);
+      await _secureStorage.write(key: _keyHash, value: passwordHash.hashBase64);
+    }
+    
+    await _secureStorage.write(key: _keyPasswordEnabled, value: passwordEnabled ? 'true' : 'false');
     await _secureStorage.write(key: _keyBiometricEnabled, value: 'true');
   }
 
@@ -65,8 +84,12 @@ class AuthRepository {
   }
 
   Future<bool> verifyPassword(String password) async {
+    final enabled = await passwordEnabled();
+    if (!enabled) return true; // No password required
+    
     final creds = await readCredentials();
-    if (creds == null) return false;
+    if (creds == null) return true; // No password set
+    
     return PasswordHasher.verify(
       password: password,
       saltBase64: creds.saltBase64,
@@ -79,5 +102,6 @@ class AuthRepository {
     await _secureStorage.delete(key: _keySalt);
     await _secureStorage.delete(key: _keyHash);
     await _secureStorage.delete(key: _keyBiometricEnabled);
+    await _secureStorage.delete(key: _keyPasswordEnabled);
   }
 }

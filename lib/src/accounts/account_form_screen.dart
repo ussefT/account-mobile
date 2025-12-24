@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../transactions/transaction_controller.dart';
 import '../utils/money.dart';
 import 'account_scope.dart';
@@ -87,8 +88,9 @@ class _AccountFormScreenState extends State<AccountFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initial != null;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit card' : 'Add card')),
+      appBar: AppBar(title: Text(isEditing ? l10n.editCard : l10n.addCard)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -98,35 +100,35 @@ class _AccountFormScreenState extends State<AccountFormScreen> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Card / Bank name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.credit_card_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.cardBankName,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.credit_card_outlined),
                   ),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
-                    if ((value ?? '').trim().isEmpty) return 'Enter a name';
+                    if ((value ?? '').trim().isEmpty) return l10n.enterCardName;
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _numberController,
-                  decoration: const InputDecoration(
-                    labelText: 'Card number (optional)',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.numbers_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.cardNumber,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.numbers_outlined),
                   ),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _initialBalanceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Initial balance',
+                  decoration: InputDecoration(
+                    labelText: l10n.initialBalance,
                     hintText: '0.00',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
                   ),
                   inputFormatters: const [MoneyTextInputFormatter()],
                   keyboardType: const TextInputType.numberWithOptions(
@@ -139,7 +141,7 @@ class _AccountFormScreenState extends State<AccountFormScreen> {
                       parseMoneyToCents(value!);
                       return null;
                     } catch (_) {
-                      return 'Enter a valid amount';
+                      return l10n.enterValidAmount;
                     }
                   },
                   onFieldSubmitted: (_) => _save(),
@@ -153,7 +155,7 @@ class _AccountFormScreenState extends State<AccountFormScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(isEditing ? 'Save' : 'Add'),
+                      : Text(isEditing ? l10n.save : l10n.add),
                 ),
               ],
             ),

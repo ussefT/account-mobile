@@ -47,7 +47,7 @@ class ChartsScreen extends StatelessWidget {
     final expenseRatio = totalCents == 0 ? 0.0 : expenseCents / totalCents;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Charts')),
+      appBar: AppBar(title: Text(l10n.charts)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -64,14 +64,14 @@ class ChartsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Last ${series.isEmpty ? 0 : series.length} days',
+                      '${l10n.lastDays} ${series.isEmpty ? 0 : series.length} ${l10n.days}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 12),
                     AspectRatio(
                       aspectRatio: 2.2,
                       child: series.isEmpty
-                          ? const Center(child: Text('No data'))
+                          ? Center(child: Text(l10n.noData))
                           : _LineChart(
                               values: series
                                   .map((e) => e.balanceCents)
@@ -80,7 +80,7 @@ class ChartsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Current ${l10n.locale.languageCode == 'fa' ? formatMoneyPersian(series.isEmpty ? initialBalanceCents : series.last.balanceCents) : formatMoneyCents(series.isEmpty ? initialBalanceCents : series.last.balanceCents)}',
+                      '${l10n.current} ${l10n.locale.languageCode == 'fa' ? formatMoneyPersian(series.isEmpty ? initialBalanceCents : series.last.balanceCents) : formatMoneyCents(series.isEmpty ? initialBalanceCents : series.last.balanceCents)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -95,14 +95,14 @@ class ChartsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Income vs expenses',
+                      l10n.incomeVsExpenses,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
                     AspectRatio(
                       aspectRatio: 2.2,
                       child: totalCents == 0
-                          ? const Center(child: Text('No data'))
+                          ? Center(child: Text(l10n.noData))
                           : Row(
                               children: [
                                 Expanded(
@@ -136,7 +136,7 @@ class ChartsScreen extends StatelessWidget {
                                     children: [
                                       _LegendRow(
                                         color: Colors.green,
-                                        label: 'Income',
+                                        label: l10n.income,
                                         value: l10n.locale.languageCode == 'fa'
                                             ? formatMoneyPersian(incomeCents)
                                             : formatMoneyCents(incomeCents),
@@ -144,7 +144,7 @@ class ChartsScreen extends StatelessWidget {
                                       const SizedBox(height: 8),
                                       _LegendRow(
                                         color: Colors.red,
-                                        label: 'Expenses',
+                                        label: l10n.expense,
                                         value: l10n.locale.languageCode == 'fa'
                                             ? formatMoneyPersian(expenseCents)
                                             : formatMoneyCents(expenseCents),

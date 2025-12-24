@@ -24,7 +24,8 @@ int parseMoneyToCents(String input) {
   if (trimmed.isEmpty) {
     throw const FormatException('Amount is empty');
   }
-  final normalized = trimmed.replaceAll(',', '');
+  // Convert Persian digits to English digits for processing
+  final normalized = _convertPersianToEnglishDigits(trimmed).replaceAll(',', '');
   final parts = normalized.split('.');
   if (parts.length > 2) throw const FormatException('Invalid amount');
 
@@ -39,6 +40,18 @@ int parseMoneyToCents(String input) {
   }
 
   return whole * 100 + fraction;
+}
+
+/// Helper to convert Persian digits to English
+String _convertPersianToEnglishDigits(String text) {
+  const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  
+  String result = text;
+  for (int i = 0; i < englishDigits.length; i++) {
+    result = result.replaceAll(persianDigits[i], englishDigits[i]);
+  }
+  return result;
 }
 
 class MoneyTextInputFormatter extends TextInputFormatter {

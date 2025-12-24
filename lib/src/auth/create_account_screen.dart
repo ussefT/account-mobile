@@ -23,6 +23,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   bool _submitting = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _enablePassword = true;
 
   // Min 8 chars, 1 upper, 1 lower, 1 digit
   final _passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$');
@@ -47,6 +48,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       await auth.createAccount(
         username: _usernameController.text,
         password: _passwordController.text,
+        passwordEnabled: _enablePassword,
       );
 
       await transactions.init();
@@ -134,86 +136,127 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
-                              labelText: l10n.password,
-                              hintText: l10n.enterPassword,
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                          const SizedBox(height: 24),
+                          Text(
+                            l10n.passwordOptional,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    setState(() => _enablePassword = true);
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: _enablePassword
+                                        ? colorScheme.primaryContainer
+                                        : null,
+                                  ),
+                                  icon: const Icon(Icons.lock_outline),
+                                  label: Text(l10n.enablePassword),
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    setState(() => _enablePassword = false);
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: !_enablePassword
+                                        ? colorScheme.tertiaryContainer
+                                        : null,
+                                  ),
+                                  icon: const Icon(Icons.lock_open),
+                                  label: Text(l10n.skipPassword),
+                                ),
                               ),
-                              filled: true,
-                              fillColor: colorScheme.surfaceVariant.withOpacity(
-                                0.3,
-                              ),
-                              helperText:
-                                  'Min 8 chars, 1 Upper, 1 Lower, 1 Digit',
-                              helperMaxLines: 2,
-                            ),
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.next,
-                            autofillHints: const [AutofillHints.newPassword],
-                            validator: (value) {
-                              final v = value ?? '';
-                              if (v.isEmpty) return l10n.enterPassword;
-                              if (!_passwordRegex.hasMatch(v)) {
-                                return l10n.passwordTooWeak;
-                              }
-                              return null;
-                            },
+                            ],
                           ),
                           const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _confirmController,
-                            decoration: InputDecoration(
-                              labelText: l10n.confirmPassword,
-                              prefixIcon: const Icon(
-                                Icons.check_circle_outline,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureConfirm
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                          if (_enablePassword)
+                            TextFormField(
+                              controller: _passwordController,
+                              decoration: InputDecoration(
+                                labelText: l10n.password,
+                                hintText: l10n.enterPassword,
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureConfirm = !_obscureConfirm;
-                                  });
-                                },
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: colorScheme.surfaceVariant.withOpacity(
+                                  0.3,
+                                ),
+                                helperText:
+                                    'Min 8 chars, 1 Upper, 1 Lower, 1 Digit',
+                                helperMaxLines: 2,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: colorScheme.surfaceVariant.withOpacity(
-                                0.3,
-                              ),
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.next,
+                              autofillHints: const [AutofillHints.newPassword],
+                              validator: (value) {
+                                final v = value ?? '';
+                                if (v.isEmpty) return l10n.enterPassword;
+                                if (!_passwordRegex.hasMatch(v)) {
+                                  return l10n.passwordTooWeak;
+                                }
+                                return null;
+                              },
                             ),
-                            obscureText: _obscureConfirm,
-                            textInputAction: TextInputAction.done,
-                            validator: (value) {
-                              if (value != _passwordController.text) {
-                                return l10n.passwordsDoNotMatch;
-                              }
-                              return null;
-                            },
-                            onFieldSubmitted: (_) => _submit(),
-                          ),
+                          if (_enablePassword) const SizedBox(height: 16),
+                          if (_enablePassword)
+                            TextFormField(
+                              controller: _confirmController,
+                              decoration: InputDecoration(
+                                labelText: l10n.confirmPassword,
+                                prefixIcon: const Icon(
+                                  Icons.check_circle_outline,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscureConfirm = !_obscureConfirm;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: colorScheme.surfaceVariant.withOpacity(
+                                  0.3,
+                                ),
+                              ),
+                              obscureText: _obscureConfirm,
+                              textInputAction: TextInputAction.done,
+                              validator: (value) {
+                                if (value != _passwordController.text) {
+                                  return l10n.passwordsDoNotMatch;
+                                }
+                                return null;
+                              },
+                              onFieldSubmitted: (_) => _submit(),
+                            ),
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: _submitting ? null : _submit,

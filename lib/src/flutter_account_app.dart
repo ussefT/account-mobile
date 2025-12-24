@@ -152,6 +152,10 @@ class _FlutterAccountAppState extends State<FlutterAccountApp> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (!_authController.hasAccount) return const CreateAccountScreen();
+    // If password is disabled, automatically authenticate and show home
+    if (!_authController.passwordEnabled && !_authController.authenticated) {
+      _authController.login(password: '');
+    }
     if (!_authController.authenticated) return const LoginScreen();
     return const HomeScreen();
   }
